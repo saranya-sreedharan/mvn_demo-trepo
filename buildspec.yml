@@ -2,8 +2,8 @@ version: 0.2
 
 env:
   variables:
-    IMAGE_REPO_NAME: "your-ecr-repo-name"     # replace
-    AWS_DEFAULT_REGION: "us-east-1"           # replace your region
+    IMAGE_REPO_NAME: "my_repo"     # replace
+    AWS_DEFAULT_REGION: "eu-north-1"           # replace your region
 
 phases:
   pre_build:
