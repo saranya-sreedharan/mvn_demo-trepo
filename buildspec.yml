@@ -1,22 +1,30 @@
 version: 0.2
 
+env:
+  variables:
+    IMAGE_REPO_NAME: "your-ecr-repo-name"     # replace
+    AWS_DEFAULT_REGION: "us-east-1"           # replace your region
+
 phases:
   pre_build:
     commands:
-      - echo "Logging in to Amazon ECR..."
-      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin <your-account-id>.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
-      - REPOSITORY_URI=<your-account-id>.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/<your-ecr-repo-name>
-      - IMAGE_TAG=${CODEBUILD_RESOLVED_SOURCE_VERSION}
+      - echo Logging in to Amazon ECR...
+      - aws --version
+      - $(aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin <ACCOUNT_ID>.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com)
+      - REPO_URI=<ACCOUNT_ID>.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME
+      - echo REPO_URI=$REPO_URI
   build:
     commands:
-      - echo "Building Docker image..."
-      - docker build -t $REPOSITORY_URI:$IMAGE_TAG .
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      - docker build -t $IMAGE_REPO_NAME:latest .
+      - docker tag $IMAGE_REPO_NAME:latest $REPO_URI:latest
   post_build:
     commands:
-      - echo "Pushing Docker image to ECR..."
-      - docker push $REPOSITORY_URI:$IMAGE_TAG
-      - echo "Creating imagedefinitions.json for ECS..."
-      - printf '[{"name":"<your-container-name>","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
+      - echo Pushing the Docker image...
+      - docker push $REPO_URI:latest
+      - printf '[{"name":"%s","imageUri":"%s"}]\n' "container-name-in-taskdef" "${REPO_URI}:latest" > imagedefinitions.json
+      - echo Build completed on `date`
 artifacts:
   files:
     - imagedefinitions.json
