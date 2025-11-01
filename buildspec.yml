@@ -2,29 +2,28 @@ version: 0.2
 
 env:
   variables:
-    IMAGE_REPO_NAME: "my_repo"     # replace
-    AWS_DEFAULT_REGION: "eu-north-1"           # replace your region
+    IMAGE_REPO_NAME: "mvn-demo-repo"
+    AWS_REGION: "eu-north-1"
 
 phases:
   pre_build:
     commands:
-      - echo Logging in to Amazon ECR...
+      - echo Logging in to ECR...
+      - ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
       - aws --version
-      - $(aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin <ACCOUNT_ID>.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com)
-      - REPO_URI=<ACCOUNT_ID>.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME
-      - echo REPO_URI=$REPO_URI
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+      - REPO_URI=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME
+      - IMAGE_TAG=latest
   build:
     commands:
-      - echo Build started on `date`
-      - echo Building the Docker image...
-      - docker build -t $IMAGE_REPO_NAME:latest .
-      - docker tag $IMAGE_REPO_NAME:latest $REPO_URI:latest
+      - echo Building Docker image...
+      - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG .
+      - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $REPO_URI:$IMAGE_TAG
   post_build:
     commands:
-      - echo Pushing the Docker image...
-      - docker push $REPO_URI:latest
-      - printf '[{"name":"%s","imageUri":"%s"}]\n' "container-name-in-taskdef" "${REPO_URI}:latest" > imagedefinitions.json
-      - echo Build completed on `date`
+      - echo Pushing Docker image...
+      - docker push $REPO_URI:$IMAGE_TAG
+      - printf '[{"name":"%s","imageUri":"%s"}]\n' "app-container" "${REPO_URI}:$IMAGE_TAG" > imagedefinitions.json
 artifacts:
   files:
     - imagedefinitions.json
