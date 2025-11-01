@@ -1,0 +1,18 @@
+{
+  "name": "cdk-ecs-cicd-single",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "tsc",
+    "synth": "cdk synth",
+    "deploy": "cdk deploy --require-approval never"
+  },
+  "devDependencies": {
+    "aws-cdk": "2.90.0",
+    "@types/node": "16.x",
+    "typescript": "4.x"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "2.90.0",
+    "constructs": "10.1.226"
+  }
+}
